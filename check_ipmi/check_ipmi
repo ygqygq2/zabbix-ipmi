@@ -1,0 +1,54 @@
+#!/bin/bash
+#用于检测ipmi相关信息
+#Create on 2016-011-18
+#@author: Chinge_Yang
+
+args="$*"
+
+
+ipmi_sensors=/usr/sbin/ipmi-sensors
+ipmi_cfg=$(dirname $0)/ipmi.cfg
+
+options="--quiet-cache --sdr-cache-recreate --interpret-oem-data --output-sensor-state --ignore-not-available-sensors --driver-type=LAN_2_0 --output-sensor-thresholds"
+
+function usage(){
+    echo "Usage: `basename $0` options (-h HOST|-n NAME)"
+}
+
+function check(){
+    result=$($ipmi_sensors -h $host --config-file $ipmi_cfg $options|grep "$name"|awk -F"| " '{print $NF}')
+    printf "%.4f\n" $result
+}
+
+if [ $# -lt 4 ]  
+then
+    usage
+    exit 55     
+fi  
+
+# 用法: scriptname -options
+# 注意: 必须使用破折号 (-) 
+# 参数后接冒号，表示必须接值
+while getopts ":h:n:" Option;do
+  case $Option in
+    h)
+    host=$OPTARG
+    ;;
+    n)
+    name=$OPTARG
+    ;;
+    *)
+    usage
+    ;;   # 默认情况的处理
+  esac
+done
+
+shift $(($OPTIND - 1))
+#  (译者注: shift命令是可以带参数的, 参数就是移动的个数)
+#  将参数指针减1, 这样它将指向下一个参数.
+#  $1 现在引用的是命令行上的第一个非选项参数,
+#+ 如果有一个这样的参数存在的话.
+
+check
+
+exit 0
